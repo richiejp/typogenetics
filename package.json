@@ -1,0 +1,8 @@
+{
+    "name": "nodetest",
+    "version": "0.0.1",
+    "main": "app.js",
+    "dependencies": {
+	"uglify-js": "2.3.2"
+    }
+}

@@ -4,7 +4,7 @@ var uglify = require('uglify-js');
 var fs = require('fs');
 
 var clientjs = uglify.minify(['client/app.js',
-			      'client/util.js']);
+			      'client/misc.js']);
 var html = {
     index: fs.readFileSync('client/index.html', { encoding: 'utf8'})
 };

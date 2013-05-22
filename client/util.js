@@ -9,8 +9,20 @@ var util = (function(){
     me.objectEach = function(col, func){
 	for(var p in col){
 	    if(col.hasOwnProperty(p)){
-		func(col[p]);
+		func(col[p], p);
 	    }
 	}
     };
+
+    me.export = function(obj){
+	if(module != null){
+	    me.objectEach(obj, function(value, name){
+		exports[name] = value;
+	    });
+	}
+    };
+
+    return me;
 })();
+
+util.export(util);

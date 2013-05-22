@@ -1,18 +1,22 @@
 "use strict";
 
+if(module != null) var misc = require('./misc.js');
+
 var app = (function(){
     var me = {};
+
+    //make row
     var r = function(a, am, c, cm, g, gm, t, tm){
-	return {'A': {cmd: me.cmd[a], turn: am},
-		'C': {cmd: me.cmd[c], turn: cm},
-		'G': {cmd: me.cmd[g], turn: gm},
-		'T': {cmd: me.cmd[t], turn: tm}};
+	return {'A': {cmd: me.cmd[a], turn: am, name: a},
+		'C': {cmd: me.cmd[c], turn: cm, name: c},
+		'G': {cmd: me.cmd[g], turn: gm, name: g},
+		'T': {cmd: me.cmd[t], turn: tm, name: t}};
     };
 
     var turnMap = {
-	's': 0,
-	'r': -1,
-	'l': 1
+	's': 0, //straight 
+	'r': -1,//right
+	'l': 1  //left
     };
 
     var noop = function(state){ return state; };
@@ -33,7 +37,7 @@ var app = (function(){
 
     me.getCommands = function(pairs){
 	var cmds = [];
-	util.arrayEach(pairs, function(p){
+	misc.arrayEach(pairs, function(p){
 	    cmds.push(me.codeMap[p.first][p.last]);
 	});
 	return cmds;
@@ -41,7 +45,7 @@ var app = (function(){
 
     me.getBindingLetter = function(commands){
 	var dir = 0;
-	util.arrayEach(commands, function(c){
+	misc.arrayEach(commands, function(c){
 	    dir += turnMap[c.turn];
 	});
 	return (['A', 'C', 'T', 'G'])[Math.abs(dir % 3)];
@@ -77,5 +81,8 @@ var app = (function(){
 	'G': r('ina', 's', 'inc', 'r', 'ing', 'r', 'int', 'l'),
 	'T': r('rpy', 'r', 'rpu', 'l', 'lpy', 'l', 'lpu', 'l')
     };
+
+    return me;
 })();
 
+misc.exporter(module, app);

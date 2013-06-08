@@ -43,12 +43,12 @@ var app = (function(){
 	return cmds;
     };
 
-    me.getBindingLetter = function(commands){
+    me.getBindingPreference = function(commands){
 	var dir = 0;
 	misc.arrayEach(commands, function(c){
 	    dir += turnMap[c.turn];
 	});
-	return (['A', 'C', 'T', 'G'])[Math.abs(dir % 3)];
+	return (['A', 'C', 'T', 'G'])[(4 + (dir % 4)) % 4];
     };
 
     me.doCommand = function(state){

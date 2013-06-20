@@ -6,6 +6,13 @@ if(typeof module !== 'undefined'){
 
 var app = (function(){
     var me = {};
+    var typeReference = function(){
+	var me2 = {};
+	me2.pair = { first: '', last: '' };
+	me2.gene = { code: '', pairs: [me2.pair] };
+	me2.state = {};
+	return me2;
+    }();
 
     //make row
     var r = function(a, am, c, cm, g, gm, t, tm){
@@ -66,7 +73,7 @@ var app = (function(){
 	if(pj < pi){
 	    genes.push({
 		pairs: pairs.slice(pj, pi),
-		code: code.slice(cj, pairs[pi].i)
+		code: code.slice(cj, pairs[pi - 1].j + 1)
 	    });
 	}
 	return genes;

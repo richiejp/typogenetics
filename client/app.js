@@ -1,6 +1,8 @@
 "use strict";
 
-if(module != null) var misc = require('./misc.js');
+if(typeof module !== 'undefined'){
+    var misc = require('./misc.js');
+}
 
 var app = (function(){
     var me = {};
@@ -19,13 +21,20 @@ var app = (function(){
 	'l': 1  //left
     };
 
+    var complement = {
+	'A': 'T',
+	'T': 'A',
+	'G': 'C',
+	'C': 'G'
+    };
+
     var noop = function(state){ return state; };
 
     me.getPairs = function(code){
 	var pairs = [];
 	for(var i = 0, j = 1;;){
 	    if(j < code.length){
-		pairs.push({ first: code[i], last: code[j] });
+		pairs.push({ first: code[i], last: code[j], i: i, j: j });
 	    }else{
 		break;
 	    }
@@ -35,10 +44,38 @@ var app = (function(){
 	return pairs;
     };
 
+    me.getCmd = function(pair){
+	return me.codeMap[pair.first][pair.last];
+    };
+
+    me.splitGeneOnPunctuation = function(code, pairs){
+	var genes = [];
+	var cj = 0, pi = 0, pj = 0;
+	for(; pi < pairs.length; pi++){
+	    if(me.getCmd(pairs[pi]).name === '   '){
+		if(pi !== pj){
+		    genes.push({
+			pairs: pairs.slice(pj, pi),
+			code: code.slice(cj, pairs[pi].i)
+		    });
+		}
+		pj = pi + 1; 
+		cj = pairs[pi].j + 1;
+	    }
+	}
+	if(pj < pi){
+	    genes.push({
+		pairs: pairs.slice(pj, pi),
+		code: code.slice(cj, pairs[pi].i)
+	    });
+	}
+	return genes;
+    };
+
     me.getCommands = function(pairs){
 	var cmds = [];
 	misc.arrayEach(pairs, function(p){
-	    cmds.push(me.codeMap[p.first][p.last]);
+	    cmds.push(me.getCmd(p));
 	});
 	return cmds;
     };
@@ -50,9 +87,25 @@ var app = (function(){
 	});
 	return (['A', 'C', 'T', 'G'])[(4 + (dir % 4)) % 4];
     };
+    
+    me.current = function(state){
+	return state.code[state.curIndx];
+    };
 
-    me.doCommand = function(state){
-	return me.cmd[state.command](state);
+    me.onPreference = function(state){
+	return me.current(state) === state.bindingPref;
+    };
+    
+    me.bindToPreference = function(state){
+	state.curIndx = 0;
+	while(!me.onPreference(state)
+	     && state.curIndx < state.code.length){
+	    state.curIndx += 1;
+	}
+	if(!me.onPreference(state)){
+	    state.curIndx = Math.round(state.code.length / 2) - 1;
+	}
+	return state;
     };
     
     me.cmd = {
@@ -74,6 +127,10 @@ var app = (function(){
 	'   ': noop
     };
     
+    me.doCommand = function(state){
+	return me.cmd[state.command](state);
+    };
+    
     me.codeMap = {
 	//       A           C           G           T
 	'A': r('   ', ' ', 'cut', 's', 'del', 's', 'swi', 'r'),
@@ -85,4 +142,6 @@ var app = (function(){
     return me;
 })();
 
-misc.exporter(module, app);
+if(typeof module !== 'undefined'){
+    misc.exporter(module, app);
+}

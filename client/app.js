@@ -10,7 +10,8 @@ var app = (function(){
 	var me2 = {};
 	me2.pair = { first: '', last: '' };
 	me2.gene = { code: '', pairs: [me2.pair] };
-	me2.state = {};
+	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: ''};
+	me2.gameStage = { initialCode: '', initialPairs: [], genes: [me2.gene] };
 	return me2;
     }();
 
@@ -144,6 +145,45 @@ var app = (function(){
 	'C': r('mvr', 's', 'mvl', 's', 'cop', 'r', 'off', 'l'),
 	'G': r('ina', 's', 'inc', 'r', 'ing', 'r', 'int', 'l'),
 	'T': r('rpy', 'r', 'rpu', 'l', 'lpy', 'l', 'lpu', 'l')
+    };
+
+    me.publishToLog = function(from, objects){
+	misc.log.info('in: ' + from);
+	misc.log.info(objects);
+    };
+
+    me.nestFrom = function(inner, outer){
+	return inner +  '->' + outer;
+    };
+
+    me.publishCode = function(from, code){
+	me.publishToLog(me.nestFrom(from, 'code'), code);
+    };
+
+    me.publishPairs = function(from, pairs){
+	me.publishToLog(me.nestFrom(from, 'pairs'), pairs);
+    };
+
+    me.publishGene = function(from, gene){
+	me.publishCode(me.nestFrom(from, 'gene'), gene.code);
+	me.publishPairs(me.nestFrom(from, 'gene'), gene.pairs);
+    };
+
+    me.publishGenes = function(from, genes){
+	misc.arrayEach(genes, function(gene){
+	    me.publishGene(from, gene);
+	});
+    };
+
+    me.activate = function(gene){
+    };
+
+    me.go = function(code){
+	var genes;
+	var pairs = me.getPairs(code);
+	me.publishPairs('go-init', pairs);
+	genes = me.splitGeneOnPunctuation(code, pairs);
+	me.publishGenes('go-init', genes);
     };
 
     return me;

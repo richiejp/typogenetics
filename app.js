@@ -3,27 +3,47 @@ var URL = require('url');
 var uglify = require('uglify-js');
 var fs = require('fs');
 
-var clientjs = uglify.minify(['client/app.js',
-			      'client/misc.js']);
+var clientjs;
 var html = {
-    index: fs.readFileSync('client/index.html', { encoding: 'utf8'})
+    index: 'There is a problem on our end.'
 };
+
+var loadClientjs = function(){
+    return uglify.minify(['client/app.js',
+			  'client/misc.js']);
+};
+
+var loadHtml = function(fileName){
+    return fs.readFileSync(fileName, { encoding: 'utf8'});
+};
+
+var loadClientStuff = function(){
+    clientjs = loadClientjs();
+    html.index = loadHtml('client/index.html');
+};
+
+loadClientStuff();
 
 http.createServer(function(req, res) {
     var url = URL.parse(req.url);
     switch(url.pathname){
 	case '/': {
-	    res.writeHead(200, {'Content-Type': 'text/html'});
+	    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
 	    res.end(html.index);
 	    break;
 	}
 	case '/r/a.js': {
-	    res.writeHead(200, {'Content-Type': 'application/javascript'});
+	    res.writeHead(200, {'Content-Type': 'application/javascript; charset=utf-8'});
 	    res.end(clientjs.code);
 	    break;
 	}
+	case '/reload': {
+	    loadClientStuff();
+	    res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'});
+	    res.end('Reloaded at ' + new Date());
+	}
 	default: {
-	    res.writeHead(404, {'Content-Type': 'text/plain'});
+	    res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
 	    res.end('The path "' + url.pathname + '", leads nowhere.');
 	}
     }

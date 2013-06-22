@@ -175,7 +175,23 @@ var app = (function(){
 	});
     };
 
+    me.publishCommands = function(from, commands){
+	me.publishToLog(from, misc.arrayMap(commands, function(c){
+	    return { name: c.name, turn: c.turn };
+	}));
+    };
+
+    me.publishState = function(from, state){
+	me.publishToLog(from, state);
+    };
+
     me.activate = function(gene){
+	var cmds = me.getCommands(gene.pairs);
+	var state = { code: gene.code, mirror: '', curIndx: 0 };
+	me.publishCommands('activate', cmds);
+	state.bindingPref = me.getBindingPreference(cmds);
+	state = me.bindToPreference(state);
+	me.publishState('activate', state);
     };
 
     me.go = function(code){
@@ -184,6 +200,9 @@ var app = (function(){
 	me.publishPairs('go-init', pairs);
 	genes = me.splitGeneOnPunctuation(code, pairs);
 	me.publishGenes('go-init', genes);
+	misc.arrayEach(genes, function(gene){
+	    me.activate(gene);
+	});
     };
 
     return me;

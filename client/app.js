@@ -10,8 +10,8 @@ var app = (function(){
 	var me2 = {};
 	me2.pair = { first: '', last: '' };
 	me2.gene = { code: '', pairs: [me2.pair] };
-	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: ''};
-	me2.gameStage = { initialCode: '', initialPairs: [], genes: [me2.gene] };
+	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: '', codeSplits: ['']};
+	me2.gameStage = { initialCode: '', initialPairs: [me2.pair], genes: [me2.gene] };
 	return me2;
     }();
 
@@ -115,9 +115,26 @@ var app = (function(){
 	}
 	return state;
     };
+
+    me.substrBefore = function(str, indx){
+	return str.substr(0, indx + 1);
+    };
+
+    me.substrAfter = function(str, indx){
+	return str.substr(indx + 1, str.length - indx - 1);
+    };
     
     me.cmd = {
-	'cut': noop,
+	'cut': function(s){
+	    var mirrorSplit;
+	    if(s.curIndx + 2 >= s.code.length) return s;
+	    s.codeSplits.push(me.substrAfter(s.code, s.curIndx));
+	    s.code = me.substrBefore(s.code, s.curIndx);
+	    mirrorSplit = misc.remove(me.substrAfter(s.mirror, s.curIndx), ' ');
+	    if(mirrorSplit !== '') s.codeSplits.push(mirrorSplit);
+	    s.mirror = me.substrBefore(s.mirror, s.curIndx);
+	    return s;
+	},
 	'del': noop,
 	'swi': noop,
 	'mvr': noop,

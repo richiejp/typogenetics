@@ -135,7 +135,12 @@ var app = (function(){
 	    s.mirror = me.substrBefore(s.mirror, s.curIndx);
 	    return s;
 	},
-	'del': noop,
+	'del': function(s){
+	    var arcd = misc.toArray(s.code);
+	    arcd[s.curIndx] = ' ';
+	    s.code = misc.arrToStr(arcd);
+	    return s;
+	},
 	'swi': noop,
 	'mvr': noop,
 	'mvl': noop,

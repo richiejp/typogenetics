@@ -10,7 +10,8 @@ var app = (function(){
 	var me2 = {};
 	me2.pair = { first: '', last: '' };
 	me2.gene = { code: '', pairs: [me2.pair] };
-	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: '', codeSplits: ['']};
+	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: '', codeSplits: ['']
+		    , copyMode: false};
 	me2.gameStage = { initialCode: '', initialPairs: [me2.pair], genes: [me2.gene] };
 	return me2;
     }();
@@ -123,6 +124,34 @@ var app = (function(){
     me.substrAfter = function(str, indx){
 	return str.substr(indx + 1, str.length - indx - 1);
     };
+
+    me.insert = function(s, c){
+	s.code = me.substrBefore(s.code, s.curIndx)
+	    + c + me.substrAfter(s.code, s.curIndx);
+	if(s.copyMode){
+	    me.mirror(s);
+	}
+	return s;
+    };
+
+    me.eos = function(s){
+	return s.curIndx + 1 >= s.code.length;
+    };
+
+    me.skipFiller = function(s, direction){
+	while(!me.eos(s) && me.current(s) == ' '){
+	    s.curIndx += direction;
+	}
+	return s;
+    };
+
+    me.mirror = function(s){
+	if(s.copyMode && s.curIndx < s.code.length){
+	    s.mirror = s.mirror.substr(0, s.curIndx)
+		+ complement[me.current(s)] + s.mirror.substring(s.curIndx + 1);
+	}
+	return s;
+    };
     
     me.cmd = {
 	'cut': function(s){
@@ -141,15 +170,45 @@ var app = (function(){
 	    s.code = misc.arrToStr(arcd);
 	    return s;
 	},
-	'swi': noop,
-	'mvr': noop,
-	'mvl': noop,
-	'cop': noop,
-	'off': noop,
-	'ina': noop,
-	'inc': noop,
-	'ing': noop,
-	'int': noop,
+	'swi': function(s){
+	    var temp = s.code;
+	    s.code = s.mirror;
+	    s.mirror = temp;
+	    return s;
+	},
+	'mvr': function(s){
+	    s.curIndx += 1;
+	    me.skipFiller(s, 1);
+	    me.mirror(s);
+	    return s;
+	},
+	'mvl': function(s){
+	    s.curIndx -= 1;
+	    me.skipFiller(s, -1);
+	    me.mirror(s);
+	    return s;
+	},
+	'cop': function(s){
+	    s.copyMode = true;
+	    me.mirror(s);
+	    return s;
+	},
+	'off': function(s){
+	    s.copyMode = false;
+	    return s;
+	},
+	'ina': function(s){
+	    me.insert(s, 'A');
+	},
+	'inc': function(s){
+	    me.insert(s, 'C');
+	},
+	'ing': function(s){
+	    me.insert(s, 'G');
+	},
+	'int': function(s){
+	    me.insert(s, 'T');
+	},
 	'rpy': noop,
 	'rpu': noop,
 	'lpy': noop,

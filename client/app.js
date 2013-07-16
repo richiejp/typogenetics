@@ -10,9 +10,10 @@ var app = (function(){
 	var me2 = {};
 	me2.pair = { first: '', last: '' };
 	me2.gene = { code: '', pairs: [me2.pair] };
-	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: '', codeSplits: ['']
-		    , copyMode: false};
-	me2.gameStage = { initialCode: '', initialPairs: [me2.pair], genes: [me2.gene] };
+	me2.state = { code: '', mirror: '', curIndx: 0, bindingPref: ''
+		    , codeSplits: [''], copyMode: false};
+	me2.gameStage = { initialCode: '', initialPairs: [me2.pair],
+			  genes: [me2.gene] };
 	return me2;
     }();
 
@@ -35,6 +36,13 @@ var app = (function(){
 	'T': 'A',
 	'G': 'C',
 	'C': 'G'
+    };
+
+    var baseType = {
+	'A': 'purine',
+	'G': 'purine',
+	'C': 'pyrimidine',
+	'T': 'pyrimidine'
     };
 
     var noop = function(state){ return state; };
@@ -126,27 +134,67 @@ var app = (function(){
     };
 
     me.insert = function(s, c){
-	s.code = me.substrBefore(s.code, s.curIndx)
-	    + c + me.substrAfter(s.code, s.curIndx);
+	var inn = function(str, chr){
+	    return me.substrBefore(str, s.curIndx)
+	    + chr + me.substrAfter(str, s.curIndx);
+	};
 	if(s.copyMode){
-	    me.mirror(s);
+	    s.mirror = inn(s.mirror, complement[c]);
+	}else{
+	    s.mirror = inn(s.mirror, ' ');
 	}
+	s.code = inn(s.code, c);
 	return s;
     };
 
+    //End of strand
     me.eos = function(s){
 	return s.curIndx + 1 >= s.code.length;
     };
 
+    //Beginning of strand
+    me.bos = function(s){
+	return s.curIndx - 1 <= 0;
+    };
+
+    //Far as possible
+    me.fap = function(s, direction){
+	return (me.eos(s) && direction > 0) || (me.bos(s) && direction < 0);
+    };
+
     me.skipFiller = function(s, direction){
-	while(!me.eos(s) && me.current(s) == ' '){
+	while(!me.fap(s, direction) && me.current(s) == ' '){
+	    s.curIndx += direction;
+	}
+	return s;
+    };
+
+    me.searchUntil = function(s, direction, bt){
+	var lastIndx = s.curIndx;
+	if(me.fap(s, direction)){
+	    return s;
+	}
+	s.curIndx += direction;
+	while(baseType[me.current(s)] !== bt){
+	    me.skipFiller(s, direction);
+	    if(me.current(s) == ' '){
+		s.curIndx = lastIndx;
+		break;
+	    }
+	    if(me.fap(s, direction)){
+		break;
+	    }
+	    if(me.copyMode){
+		me.mirror(s);
+	    }
+	    lastIndx = s.curIndx;
 	    s.curIndx += direction;
 	}
 	return s;
     };
 
     me.mirror = function(s){
-	if(s.copyMode && s.curIndx < s.code.length){
+	if(s.curIndx < s.code.length){
 	    s.mirror = s.mirror.substr(0, s.curIndx)
 		+ complement[me.current(s)] + s.mirror.substring(s.curIndx + 1);
 	}
@@ -198,21 +246,29 @@ var app = (function(){
 	    return s;
 	},
 	'ina': function(s){
-	    me.insert(s, 'A');
+	    return me.insert(s, 'A');
 	},
 	'inc': function(s){
-	    me.insert(s, 'C');
+	    return me.insert(s, 'C');
 	},
 	'ing': function(s){
-	    me.insert(s, 'G');
+	    return me.insert(s, 'G');
 	},
 	'int': function(s){
-	    me.insert(s, 'T');
+	    return me.insert(s, 'T');
 	},
-	'rpy': noop,
-	'rpu': noop,
-	'lpy': noop,
-	'lpu': noop,
+	'rpy': function(s){
+	    return me.searchUntil(s, 1, 'pyrimidine');
+	},
+	'rpu': function(s){
+	    return me.searchUntil(s, 1, 'purine');
+	},
+	'lpy': function(s){
+	    return me.searchUntil(s, -1, 'pyrimidine');
+	},
+	'lpu': function(s){
+	    return me.searchUntil(s, -1, 'purine');
+	},
 	'   ': noop
     };
     

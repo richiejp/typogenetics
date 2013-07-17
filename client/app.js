@@ -193,6 +193,9 @@ var app = (function(){
 	return s;
     };
 
+    me.nearestNonBlank = function(s){
+	while(me.current
+
     me.mirror = function(s){
 	if(s.curIndx < s.code.length){
 	    s.mirror = s.mirror.substr(0, s.curIndx)
@@ -222,6 +225,9 @@ var app = (function(){
 	    var temp = s.code;
 	    s.code = s.mirror;
 	    s.mirror = temp;
+	    me.reverse(s.code);
+	    me.reverse(s.mirror);
+	    me.nearestNonBlank(s);
 	    return s;
 	},
 	'mvr': function(s){
@@ -324,11 +330,22 @@ var app = (function(){
 
     me.activate = function(gene){
 	var cmds = me.getCommands(gene.pairs);
-	var state = { code: gene.code, mirror: '', curIndx: 0 };
+	var state = { code: gene.code,
+		      mirror: misc.blanks(gene.code.length),
+		      copyMode: false,
+		      curIndx: 0 };
 	me.publishCommands('activate', cmds);
 	state.bindingPref = me.getBindingPreference(cmds);
 	state = me.bindToPreference(state);
 	me.publishState('activate', state);
+	misc.arrayEach(cmds, function(cmd){
+	    state.command = cmd;
+	    me.publishState('activate', me.doCommand(state));
+	}, function(cmd){
+	    return state.curIndx >= state.code.length
+		|| state.curIndx < 0
+		|| me.current(state) === ' ';
+	});
     };
 
     me.go = function(code){

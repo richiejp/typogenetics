@@ -42,7 +42,8 @@ var app = (function(){
 	'A': 'purine',
 	'G': 'purine',
 	'C': 'pyrimidine',
-	'T': 'pyrimidine'
+	'T': 'pyrimidine',
+	' ': 'not a base'
     };
 
     var noop = function(state){ return state; };
@@ -154,7 +155,7 @@ var app = (function(){
 
     //Beginning of strand
     me.bos = function(s){
-	return s.curIndx - 1 <= 0;
+	return s.curIndx <= 0;
     };
 
     //Far as possible
@@ -163,21 +164,22 @@ var app = (function(){
     };
 
     me.skipFiller = function(s, direction){
-	while(!me.fap(s, direction) && me.current(s) == ' '){
+	while(!me.fap(s, direction) && me.current(s) === ' '){
 	    s.curIndx += direction;
 	}
 	return s;
     };
 
     me.searchUntil = function(s, direction, bt){
-	var lastIndx = s.curIndx;
+	var lastIndx;
 	if(me.fap(s, direction)){
 	    return s;
 	}
-	s.curIndx += direction;
-	while(baseType[me.current(s)] !== bt){
+	do{
+	    lastIndx = s.curIndx;
+	    s.curIndx += direction;
 	    me.skipFiller(s, direction);
-	    if(me.current(s) == ' '){
+	    if(me.current(s) === ' '){
 		s.curIndx = lastIndx;
 		break;
 	    }
@@ -187,9 +189,7 @@ var app = (function(){
 	    if(me.copyMode){
 		me.mirror(s);
 	    }
-	    lastIndx = s.curIndx;
-	    s.curIndx += direction;
-	}
+	}while(baseType[me.current(s)] !== bt);
 	return s;
     };
 

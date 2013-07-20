@@ -163,6 +163,18 @@ var app = (function(){
 	return (me.eos(s) && direction > 0) || (me.bos(s) && direction < 0);
     };
 
+    me.oob = function(s){
+	return s.curIndx < 0 || s.curIndx >= s.code.length;
+    };
+
+    me.mirror = function(s){
+	if(!me.oob(s)){
+	    s.mirror = s.mirror.substr(0, s.curIndx)
+		+ complement[me.current(s)] + s.mirror.substring(s.curIndx + 1);
+	}
+	return s;
+    };
+    
     me.skipFiller = function(s, direction){
 	while(!me.fap(s, direction) && me.current(s) === ' '){
 	    s.curIndx += direction;
@@ -183,25 +195,43 @@ var app = (function(){
 		s.curIndx = lastIndx;
 		break;
 	    }
+	    if(s.copyMode){
+		me.mirror(s);
+	    }
 	    if(me.fap(s, direction)){
 		break;
-	    }
-	    if(me.copyMode){
-		me.mirror(s);
 	    }
 	}while(baseType[me.current(s)] !== bt);
 	return s;
     };
 
     me.nearestNonBlank = function(s){
-	while(me.current
-
-    me.mirror = function(s){
-	if(s.curIndx < s.code.length){
-	    s.mirror = s.mirror.substr(0, s.curIndx)
-		+ complement[me.current(s)] + s.mirror.substring(s.curIndx + 1);
-	}
+	var lIndx = s.curIndx;
+	var rIndx = s.curIndx;
+	if(me.current(s) != ' ') return s;
+	do{
+	    var lEnd = lIndx <= 0;
+	    var rEnd = rIndx >= s.code.length - 1;
+	    if(s.code[lIndx] !== ' '){
+		s.curIndx = lIndx;
+		return s;
+	    }
+	    if(s.code[rIndx] !== ' '){
+	    	s.curIndx = rIndx;
+	    	return s;
+	    }
+	    if(!lEnd) lIndx -= 1;
+	    if(!rEnd) rIndx += 1;
+	}while(!lEnd && !rEnd);
 	return s;
+    };
+
+    me.reverse = function(str){
+	var chrs = [];
+	for(var i = str.length - 1; i >= 0; i--){
+	    chrs.push(str[i]);
+	}
+	return misc.arrToStr(chrs);
     };
     
     me.cmd = {
@@ -225,8 +255,9 @@ var app = (function(){
 	    var temp = s.code;
 	    s.code = s.mirror;
 	    s.mirror = temp;
-	    me.reverse(s.code);
-	    me.reverse(s.mirror);
+	    s.code = me.reverse(s.code);
+	    s.mirror = me.reverse(s.mirror);
+	    s.curIndx = (s.code.length - 1) - s.curIndx;
 	    me.nearestNonBlank(s);
 	    return s;
 	},

@@ -6,8 +6,14 @@
   <body>
     <h1>Typogenetics</h1>
     <h2>A &lsquo;Game&sbquo; from GEB</h2>
-    <p>Look in the console...</p>
+    <input type="text" id="game-code" value="ACAAGTATTGCG"/>
+    <button type="button"
+	    onclick="app.onGoButtonClick()">
+      Go!
+    </button>
+    <div id="game-results">
+      
+    </div>
     <script type="text/javascript" src="/r/a.js"></script>
-    <script type="text/javascript">app.go('ACAAGTATTGCG');</script>
   </body>
 </html>

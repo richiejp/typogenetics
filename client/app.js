@@ -19,10 +19,10 @@ var app = (function(){
 
     //make row
     var r = function(a, am, c, cm, g, gm, t, tm){
-	return {'A': {cmd: me.cmd[a], turn: am, name: a},
-		'C': {cmd: me.cmd[c], turn: cm, name: c},
-		'G': {cmd: me.cmd[g], turn: gm, name: g},
-		'T': {cmd: me.cmd[t], turn: tm, name: t}};
+	return {'A': {turn: am, name: a},
+		'C': {turn: cm, name: c},
+		'G': {turn: gm, name: g},
+		'T': {turn: tm, name: t}};
     };
 
     var turnMap = {
@@ -163,6 +163,7 @@ var app = (function(){
 	return (me.eos(s) && direction > 0) || (me.bos(s) && direction < 0);
     };
 
+    //Out of bounds
     me.oob = function(s){
 	return s.curIndx < 0 || s.curIndx >= s.code.length;
     };
@@ -321,42 +322,17 @@ var app = (function(){
 	'T': r('rpy', 'r', 'rpu', 'l', 'lpy', 'l', 'lpu', 'l')
     };
 
-    me.publishToLog = function(from, objects){
-	misc.log.info('in: ' + from);
-	misc.log.info(objects);
+    me.show = function(msg, ){
+	var resElem = document.getElementById('game-results');
+	var msgElem = document.createElement('p');
+	msgElem.textContent = msg;
+	resElem.appendChild(msgElem);
     };
 
-    me.nestFrom = function(inner, outer){
-	return inner +  '->' + outer;
-    };
-
-    me.publishCode = function(from, code){
-	me.publishToLog(me.nestFrom(from, 'code'), code);
-    };
-
-    me.publishPairs = function(from, pairs){
-	me.publishToLog(me.nestFrom(from, 'pairs'), pairs);
-    };
-
-    me.publishGene = function(from, gene){
-	me.publishCode(me.nestFrom(from, 'gene'), gene.code);
-	me.publishPairs(me.nestFrom(from, 'gene'), gene.pairs);
-    };
-
-    me.publishGenes = function(from, genes){
-	misc.arrayEach(genes, function(gene){
-	    me.publishGene(from, gene);
+    me.removeEmpties = function(arr){
+	return arr.filter(function(str){
+	    return /^\s*$/.test(str);
 	});
-    };
-
-    me.publishCommands = function(from, commands){
-	me.publishToLog(from, misc.arrayMap(commands, function(c){
-	    return { name: c.name, turn: c.turn };
-	}));
-    };
-
-    me.publishState = function(from, state){
-	me.publishToLog(from, state);
     };
 
     me.activate = function(gene){
@@ -365,29 +341,35 @@ var app = (function(){
 		      mirror: misc.blanks(gene.code.length),
 		      copyMode: false,
 		      curIndx: 0 };
-	me.publishCommands('activate', cmds);
+	var resultCodes;
 	state.bindingPref = me.getBindingPreference(cmds);
 	state = me.bindToPreference(state);
-	me.publishState('activate', state);
 	misc.arrayEach(cmds, function(cmd){
-	    state.command = cmd;
-	    me.publishState('activate', me.doCommand(state));
+	    state.command = cmd.name;
 	}, function(cmd){
-	    return state.curIndx >= state.code.length
-		|| state.curIndx < 0
-		|| me.current(state) === ' ';
+	    return me.oob(state) || me.current(state) === ' ';
 	});
+	return [misc.remove(state.code, ' '), misc.remove(state.mirror, ' ')];
     };
 
     me.go = function(code){
 	var genes;
 	var pairs = me.getPairs(code);
-	me.publishPairs('go-init', pairs);
+	var resultCodes = [];
+	me.show('Starting with code: ' + code);
 	genes = me.splitGeneOnPunctuation(code, pairs);
-	me.publishGenes('go-init', genes);
 	misc.arrayEach(genes, function(gene){
-	    me.activate(gene);
+	    resultCodes = resultCodes.concat(me.activate(gene));
 	});
+	me.show('Resulting in these codes: ');
+	misc.arrayEach(resultCodes, function(c){
+	    if(c !== '')
+		me.show(c);
+	});
+    };
+
+    me.onGoButtonClick = function(){
+	me.go(document.getElementById('game-code').value);
     };
 
     return me;

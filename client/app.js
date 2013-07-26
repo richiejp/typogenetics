@@ -322,7 +322,7 @@ var app = (function(){
 	'T': r('rpy', 'r', 'rpu', 'l', 'lpy', 'l', 'lpu', 'l')
     };
 
-    me.show = function(msg, ){
+    me.show = function(msg){
 	var resElem = document.getElementById('game-results');
 	var msgElem = document.createElement('p');
 	msgElem.textContent = msg;

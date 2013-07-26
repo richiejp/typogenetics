@@ -1,0 +1,8 @@
+Typogenetics was invented by Douglas R. Hofstadter for GEB. This is an implementation of it created from its description found in chapter XVI of the book. My interpretation of the rules may vary from that of the authors original vision, but not to an extent that I think it matters.
+
+It can be run with: "nodejs app.js", then go to http://localhost:8080. There are also unit tests in client/tests.js which can be run with nodeunit. 
+
+The author is me; Richard Palethorpe.
+
+http://richiejp.com
+richiejp@f-m.fm
